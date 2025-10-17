@@ -1,0 +1,10 @@
+# This is a placeholder for the default application icon
+#
+# To create a proper icon:
+# 1. Create a 256x256 PNG image with your logo/icon
+# 2. Convert to ICO format with multiple resolutions (16x16, 32x32, 48x48, 256x256)
+# 3. Online tools: https://convertio.co/png-ico/ or https://icoconvert.com/
+# 4. Replace this file with the generated icon_default.ico
+#
+# For now, this text file serves as a placeholder to prevent errors.
+# pywebview will use a system default icon if this file is not a valid image.

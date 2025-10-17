@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streamlit-template-desktop"
+version = "0.1.0"
+description = "A boilerplate project for creating Streamlit desktop applications with binary generation for Win11/Unix"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "streamlit>=1.30.0",
+    "pywebview>=4.4.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyinstaller>=6.0",
+    "pytest>=7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/streamlit-template-desktop"
+Repository = "https://github.com/yourusername/streamlit-template-desktop"
+
+[tool.setuptools]
+packages = ["src"]
