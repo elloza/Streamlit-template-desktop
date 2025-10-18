@@ -1,91 +1,126 @@
 """
 Desktop application entry point.
 Starts Streamlit server and launches pywebview window.
+
+CRITICAL FIX FOR WINDOWS PYINSTALLER:
+This application uses multiprocessing.Process to start the Streamlit server.
+PyInstaller has native support for multiprocessing via freeze_support().
+This prevents infinite process spawning that occurs with subprocess.Popen.
+
+Architecture: Multiprocessing with spawn context
+- Streamlit runs in separate process for isolation
+- PyInstaller's multiprocessing hooks handle frozen execution
+- Compatible with subprocess-based tools (Playwright, Selenium, etc.)
 """
 import sys
-import subprocess
 import atexit
 import logging
+import multiprocessing
 from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent))
 
-from src.logic.server_manager import find_free_port, wait_for_server
-from src.logic.logger import setup_logging
-from src.logic.config_loader import load_config, get_server_config, get_icon_path
-
-# Setup logging
-logger = setup_logging()
-
-# Global reference to subprocess for cleanup
-_streamlit_process = None
-
-
-def start_streamlit_server(port: int):
+def _streamlit_worker(port: int):
     """
-    Start Streamlit server in separate subprocess.
+    Entry point for Streamlit worker process.
+
+    This function runs in a separate process spawned by multiprocessing.Process.
+    PyInstaller's multiprocessing hook ensures this worker uses the embedded
+    Python interpreter without spawning the main .exe again.
+
+    Args:
+        port: Port number for Streamlit server
+    """
+    # Import Streamlit CLI here to avoid import-time side effects in main process
+    from streamlit.web import cli as stcli
+
+    # Configure Streamlit via sys.argv (simulates command-line execution)
+    sys.argv = [
+        "streamlit",
+        "run",
+        "src/ui/main_app.py",
+        f"--server.port={port}",
+        "--server.headless=true",
+        "--browser.gatherUsageStats=false",
+        "--server.address=127.0.0.1"
+    ]
+
+    # Run Streamlit CLI (blocks until server stops)
+    sys.exit(stcli.main())
+
+
+def start_streamlit_server(port: int, logger):
+    """
+    Start Streamlit server in separate process using multiprocessing.
+
+    This uses multiprocessing.Process instead of subprocess.Popen to avoid
+    the PyInstaller sys.executable issue where sys.executable points to the
+    frozen .exe instead of python.exe.
 
     Args:
         port: Port number to run server on
+        logger: Logger instance
 
     Returns:
-        subprocess.Popen: The Streamlit server process
+        multiprocessing.Process: The Streamlit server process
     """
-    global _streamlit_process
-
     try:
-        # Prepare Streamlit command
-        streamlit_cmd = [
-            sys.executable,  # Use same Python interpreter
-            "-m",
-            "streamlit",
-            "run",
-            "src/ui/main_app.py",
-            f"--server.port={port}",
-            "--server.headless=true",
-            "--browser.gatherUsageStats=false",
-            "--server.address=127.0.0.1"
-        ]
-
         logger.info(f"Starting Streamlit server on port {port}")
-        logger.debug(f"Command: {' '.join(streamlit_cmd)}")
 
-        # Start Streamlit in subprocess (not thread)
-        _streamlit_process = subprocess.Popen(
-            streamlit_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+        # Use spawn context explicitly for Windows compatibility
+        # spawn = fresh Python interpreter, no inherited state
+        ctx = multiprocessing.get_context('spawn')
+
+        # Create process targeting the worker function
+        process = ctx.Process(
+            target=_streamlit_worker,
+            args=(port,),
+            daemon=False,  # Not daemon - we want explicit control over termination
+            name="StreamlitServer"
         )
 
-        return _streamlit_process
+        # Start the process
+        process.start()
+        logger.info(f"Streamlit server process started (PID: {process.pid})")
+
+        return process
 
     except Exception as e:
-        logger.error(f"Failed to start Streamlit server: {e}")
+        logger.error(f"Failed to start Streamlit server: {e}", exc_info=True)
         raise
 
 
-def cleanup_streamlit():
-    """Clean up Streamlit subprocess on exit."""
-    global _streamlit_process
-    if _streamlit_process and _streamlit_process.poll() is None:
+def cleanup_streamlit(streamlit_process, logger):
+    """
+    Clean up Streamlit process on exit.
+
+    Args:
+        streamlit_process: multiprocessing.Process instance
+        logger: Logger instance
+    """
+    if streamlit_process and streamlit_process.is_alive():
         logger.info("Terminating Streamlit server...")
-        _streamlit_process.terminate()
-        try:
-            _streamlit_process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
+        streamlit_process.terminate()
+
+        # Wait for graceful shutdown
+        streamlit_process.join(timeout=5)
+
+        # Force kill if still alive
+        if streamlit_process.is_alive():
             logger.warning("Streamlit server did not terminate gracefully, killing...")
-            _streamlit_process.kill()
+            streamlit_process.kill()
+            streamlit_process.join()
+
         logger.info("Streamlit server stopped")
 
 
-def load_window_icon(config: dict) -> str:
+def load_window_icon(config: dict, get_icon_path, logger) -> str:
     """
     Load window icon with fallback to default.
 
     Args:
         config: Application configuration dictionary
+        get_icon_path: Function to get icon path from config
+        logger: Logger instance
 
     Returns:
         Path to valid icon file, or None if no valid icon found
@@ -117,12 +152,30 @@ def load_window_icon(config: dict) -> str:
 
 def main():
     """Main application entry point."""
+    # Add project root to path
+    sys.path.insert(0, str(Path(__file__).parent))
+
+    # Import modules INSIDE main to avoid import-time side effects
+    from src.logic.server_manager import find_free_port, wait_for_server
+    from src.logic.logger import setup_logging
+    from src.logic.config_loader import load_config, get_server_config, get_icon_path
+
+    # Initialize logging in main process only
+    logger = setup_logging()
+
     logger.info("=" * 60)
     logger.info("Streamlit Desktop App Starting...")
     logger.info("=" * 60)
 
+    # Process reference for cleanup
+    streamlit_process = None
+
     # Register cleanup handler
-    atexit.register(cleanup_streamlit)
+    def cleanup_handler():
+        nonlocal streamlit_process
+        cleanup_streamlit(streamlit_process, logger)
+
+    atexit.register(cleanup_handler)
 
     try:
         # Load configuration
@@ -139,17 +192,17 @@ def main():
             logger.error("No available ports found. Please close other applications and try again.")
             sys.exit(1)
 
-        # Start Streamlit in subprocess (not thread - fixes Windows signal handler issue)
-        streamlit_process = start_streamlit_server(port)
+        # Start Streamlit in separate process using multiprocessing
+        streamlit_process = start_streamlit_server(port, logger)
 
         # Wait for server to be ready
         if not wait_for_server(port, timeout=15):
             logger.error("Streamlit server failed to start within timeout")
             # Check if process crashed
-            if streamlit_process.poll() is not None:
-                stdout, stderr = streamlit_process.communicate()
-                logger.error(f"Streamlit stderr: {stderr.decode('utf-8', errors='ignore')}")
-            cleanup_streamlit()
+            if not streamlit_process.is_alive():
+                logger.error("Streamlit process terminated unexpectedly")
+                logger.error(f"Process exit code: {streamlit_process.exitcode}")
+            cleanup_streamlit(streamlit_process, logger)
             sys.exit(1)
 
         logger.info("Streamlit server is ready")
@@ -162,7 +215,7 @@ def main():
             logger.info(f"Launching desktop window: {url}")
 
             # Load window icon with validation and fallback
-            icon_path = load_window_icon(config)
+            icon_path = load_window_icon(config, get_icon_path, logger)
 
             # Create window configuration
             window_params = {
@@ -192,23 +245,27 @@ def main():
         except ImportError:
             logger.error("pywebview is not installed. Install it with: pip install pywebview")
             logger.info(f"You can access the app in your browser at: http://127.0.0.1:{port}")
-            cleanup_streamlit()
+            cleanup_streamlit(streamlit_process, logger)
             sys.exit(1)
 
         except Exception as e:
             logger.error(f"Failed to launch desktop window: {e}")
             logger.info(f"You can access the app in your browser at: http://127.0.0.1:{port}")
-            cleanup_streamlit()
+            cleanup_streamlit(streamlit_process, logger)
             sys.exit(1)
 
     except Exception as e:
         logger.error(f"Application error: {e}", exc_info=True)
-        cleanup_streamlit()
+        cleanup_streamlit(streamlit_process, logger)
         sys.exit(1)
 
     logger.info("Application closed")
-    cleanup_streamlit()
+    cleanup_streamlit(streamlit_process, logger)
 
 
 if __name__ == "__main__":
+    # CRITICAL: freeze_support() MUST be the first call in __main__
+    # This enables PyInstaller's multiprocessing hooks to handle worker processes correctly
+    # Without this, Windows will spawn infinite processes
+    multiprocessing.freeze_support()
     main()
