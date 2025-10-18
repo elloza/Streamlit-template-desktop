@@ -1,9 +1,9 @@
 name: Build Multi-Platform Binaries
 
-# Trigger on release creation or manual dispatch
+# Trigger on release publish or manual dispatch
 on:
   release:
-    types: [created, published]
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
