@@ -1,0 +1,46 @@
+# Streamlit Desktop App Configuration Template
+# Copy this file to app.yaml and customize for your application
+
+app_title: "Streamlit Desktop App"
+logo_path: "assets/logo_default.png"
+icon_path: "assets/icon_default.png"  # Window icon (title bar and taskbar)
+
+menu_items:
+  - id: "home"
+    label: "Home"
+    icon: "🏠"
+    page: "src.ui.pages.home"
+
+  - id: "feature1"
+    label: "Feature 1"
+    icon: "⚙️"
+    page: "src.ui.pages.feature1"
+
+  - id: "feature2"
+    label: "Feature 2"
+    icon: "📊"
+    page: "src.ui.pages.feature2"
+
+  - id: "about"
+    label: "About the Project"
+    icon: "ℹ️"
+    page: "src.ui.pages.about"
+
+  - id: "test_custom"
+    label: "Test Custom"
+    icon: "🧪"
+    page: "src.ui.pages.test_custom"
+
+# Streamlit theme customization (optional)
+theme:
+  primaryColor: "#1f77b4"
+  backgroundColor: "#ffffff"
+  secondaryBackgroundColor: "#f0f2f6"
+  textColor: "#262730"
+  font: "sans serif"
+
+# Server configuration (advanced, optional)
+server:
+  port_start: 8501
+  port_range: 10
+  host: "127.0.0.1"

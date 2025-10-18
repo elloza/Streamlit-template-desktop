@@ -1,0 +1,192 @@
+# Configuration Schema Contract
+# Feature: 001-streamlit-app-scaffold
+# Purpose: Define the schema for config/app.yaml
+
+# JSON Schema format (YAML representation)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Streamlit Desktop App Configuration"
+description: "Configuration schema for template application"
+type: object
+
+properties:
+  app_title:
+    type: string
+    description: "Application title shown in window and header"
+    minLength: 1
+    maxLength: 100
+    default: "Streamlit Desktop App"
+    examples:
+      - "My Application"
+      - "Data Dashboard"
+
+  logo_path:
+    type: string
+    description: "Path to logo image file (relative to project root)"
+    pattern: "^[a-zA-Z0-9_/.-]+\\.(png|jpg|jpeg|svg)$"
+    default: "assets/logo.png"
+    examples:
+      - "assets/logo.png"
+      - "assets/my_logo.jpg"
+
+  menu_items:
+    type: array
+    description: "Navigation menu items displayed in sidebar"
+    minItems: 1
+    maxItems: 20
+    items:
+      type: object
+      required: ["id", "label", "page"]
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for menu item"
+          pattern: "^[a-z0-9_-]+$"
+          minLength: 1
+          maxLength: 50
+          examples:
+            - "home"
+            - "my_feature"
+            - "settings-page"
+
+        label:
+          type: string
+          description: "Display text in sidebar menu"
+          minLength: 1
+          maxLength: 50
+          examples:
+            - "Home"
+            - "My Feature"
+            - "Settings"
+
+        icon:
+          type: string
+          description: "Emoji or icon character (optional)"
+          maxLength: 10
+          examples:
+            - "🏠"
+            - "⚙️"
+            - "📊"
+
+        page:
+          type: string
+          description: "Python module path to page implementation"
+          pattern: "^[a-zA-Z0-9_.]+$"
+          examples:
+            - "src.ui.pages.home"
+            - "src.ui.pages.my_feature"
+
+    default:
+      - id: "home"
+        label: "Home"
+        icon: "🏠"
+        page: "src.ui.pages.home"
+      - id: "feature1"
+        label: "Feature 1"
+        icon: "⚙️"
+        page: "src.ui.pages.feature1"
+      - id: "feature2"
+        label: "Feature 2"
+        icon: "📊"
+        page: "src.ui.pages.feature2"
+      - id: "about"
+        label: "About the Project"
+        icon: "ℹ️"
+        page: "src.ui.pages.about"
+
+  theme:
+    type: object
+    description: "Streamlit theme customization (optional)"
+    properties:
+      primaryColor:
+        type: string
+        description: "Primary accent color (hex format)"
+        pattern: "^#[0-9a-fA-F]{6}$"
+        default: "#1f77b4"
+
+      backgroundColor:
+        type: string
+        description: "Main background color (hex format)"
+        pattern: "^#[0-9a-fA-F]{6}$"
+        default: "#ffffff"
+
+      secondaryBackgroundColor:
+        type: string
+        description: "Secondary background color (hex format)"
+        pattern: "^#[0-9a-fA-F]{6}$"
+        default: "#f0f2f6"
+
+      textColor:
+        type: string
+        description: "Text color (hex format)"
+        pattern: "^#[0-9a-fA-F]{6}$"
+        default: "#262730"
+
+      font:
+        type: string
+        description: "Font family"
+        enum: ["sans serif", "serif", "monospace"]
+        default: "sans serif"
+
+  server:
+    type: object
+    description: "Server configuration (optional, advanced)"
+    properties:
+      port_start:
+        type: integer
+        description: "Starting port for dynamic allocation"
+        minimum: 1024
+        maximum: 65535
+        default: 8501
+
+      port_range:
+        type: integer
+        description: "Number of ports to try before giving up"
+        minimum: 1
+        maximum: 100
+        default: 10
+
+      host:
+        type: string
+        description: "Server bind address (localhost only for security)"
+        enum: ["127.0.0.1", "localhost"]
+        default: "127.0.0.1"
+
+required: ["menu_items"]
+
+# Additional validation rules (not expressible in JSON Schema)
+# - All menu_item.id values must be unique within menu_items array
+# - menu_item.page module should exist (warning if missing, show placeholder)
+# - logo_path file should exist (warning if missing, use default)
+# - theme colors should be valid hex colors (validated by pattern)
+
+# Error handling for invalid configurations:
+# 1. Missing required fields → Use built-in defaults
+# 2. Invalid types/values → Use built-in defaults for that field
+# 3. Malformed YAML → Use all built-in defaults, log warning
+# 4. Missing file → Use all built-in defaults, log warning
+# Per FR-017: Application must use built-in defaults and log warnings
+
+# Example valid configuration:
+examples:
+  - app_title: "My Data Dashboard"
+    logo_path: "assets/dashboard_logo.png"
+    menu_items:
+      - id: "home"
+        label: "Dashboard Home"
+        icon: "📊"
+        page: "src.ui.pages.home"
+      - id: "analytics"
+        label: "Analytics"
+        icon: "📈"
+        page: "src.ui.pages.analytics"
+      - id: "settings"
+        label: "Settings"
+        icon: "⚙️"
+        page: "src.ui.pages.settings"
+    theme:
+      primaryColor: "#ff6b6b"
+      backgroundColor: "#1a1a1a"
+      textColor: "#ffffff"
+    server:
+      port_start: 9000
+      port_range: 5

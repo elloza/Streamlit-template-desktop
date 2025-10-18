@@ -1,0 +1,247 @@
+name: Build Multi-Platform Binaries
+
+# Trigger on release creation or manual dispatch
+on:
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+
+jobs:
+  build-windows:
+    name: Build Windows Binary
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Windows binary
+        run: |
+          bash build/scripts/build_windows.sh
+        shell: bash
+
+      - name: Check binary size
+        run: |
+          $size = (Get-ChildItem -Path dist/StreamlitApp -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+          Write-Host "Binary size: $size MB"
+          if ($size -gt 500) {
+            Write-Error "Binary size exceeds 500MB limit!"
+            exit 1
+          }
+        shell: powershell
+
+      - name: Create ZIP archive
+        run: |
+          Compress-Archive -Path dist/StreamlitApp -DestinationPath StreamlitApp-Windows.zip
+        shell: powershell
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamlitApp-Windows
+          path: StreamlitApp-Windows.zip
+          retention-days: 90
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./StreamlitApp-Windows.zip
+          asset_name: StreamlitApp-Windows-${{ github.event.release.tag_name }}.zip
+          asset_content_type: application/zip
+
+  build-linux:
+    name: Build Linux Binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.0-37
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Linux binary
+        run: |
+          bash build/scripts/build_unix.sh
+
+      - name: Check binary size
+        run: |
+          size=$(du -sm dist/StreamlitApp | cut -f1)
+          echo "Binary size: ${size}MB"
+          if [ $size -gt 500 ]; then
+            echo "Binary size exceeds 500MB limit!"
+            exit 1
+          fi
+
+      - name: Create TAR.GZ archive
+        run: |
+          cd dist
+          tar -czf ../StreamlitApp-Linux.tar.gz StreamlitApp/
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamlitApp-Linux
+          path: StreamlitApp-Linux.tar.gz
+          retention-days: 90
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./StreamlitApp-Linux.tar.gz
+          asset_name: StreamlitApp-Linux-${{ github.event.release.tag_name }}.tar.gz
+          asset_content_type: application/gzip
+
+  build-macos:
+    name: Build MacOS Binary
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build MacOS binary
+        run: |
+          bash build/scripts/build_unix.sh
+
+      - name: Check binary size
+        run: |
+          size=$(du -sm dist/StreamlitApp | cut -f1)
+          echo "Binary size: ${size}MB"
+          if [ $size -gt 500 ]; then
+            echo "Binary size exceeds 500MB limit!"
+            exit 1
+          fi
+
+      - name: Create ZIP archive
+        run: |
+          cd dist
+          zip -r ../StreamlitApp-MacOS.zip StreamlitApp.app/
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamlitApp-MacOS
+          path: StreamlitApp-MacOS.zip
+          retention-days: 90
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./StreamlitApp-MacOS.zip
+          asset_name: StreamlitApp-MacOS-${{ github.event.release.tag_name }}.zip
+          asset_content_type: application/zip
+
+  create-release-summary:
+    name: Create Release Summary
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux, build-macos]
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Calculate checksums
+        id: checksums
+        run: |
+          cd artifacts
+          echo "## Build Artifacts" > ../release-notes.md
+          echo "" >> ../release-notes.md
+          echo "### Checksums (SHA256)" >> ../release-notes.md
+          echo "" >> ../release-notes.md
+          echo "\`\`\`" >> ../release-notes.md
+          find . -name "*.zip" -o -name "*.tar.gz" | while read file; do
+            sha256sum "$file" >> ../release-notes.md
+          done
+          echo "\`\`\`" >> ../release-notes.md
+          echo "" >> ../release-notes.md
+          echo "### Installation Instructions" >> ../release-notes.md
+          echo "" >> ../release-notes.md
+          echo "**Windows:**" >> ../release-notes.md
+          echo "1. Download \`StreamlitApp-Windows-*.zip\`" >> ../release-notes.md
+          echo "2. Extract the ZIP file" >> ../release-notes.md
+          echo "3. Run \`StreamlitApp.exe\`" >> ../release-notes.md
+          echo "" >> ../release-notes.md
+          echo "**Linux:**" >> ../release-notes.md
+          echo "1. Download \`StreamlitApp-Linux-*.tar.gz\`" >> ../release-notes.md
+          echo "2. Extract: \`tar -xzf StreamlitApp-Linux-*.tar.gz\`" >> ../release-notes.md
+          echo "3. Install dependencies: \`sudo apt-get install libgtk-3-0 libwebkit2gtk-4.0-37\`" >> ../release-notes.md
+          echo "4. Run: \`./StreamlitApp/StreamlitApp\`" >> ../release-notes.md
+          echo "" >> ../release-notes.md
+          echo "**MacOS:**" >> ../release-notes.md
+          echo "1. Download \`StreamlitApp-MacOS-*.zip\`" >> ../release-notes.md
+          echo "2. Extract the ZIP file" >> ../release-notes.md
+          echo "3. Right-click \`StreamlitApp.app\` → Open (first time only)" >> ../release-notes.md
+          echo "4. Grant permissions if prompted" >> ../release-notes.md
+          cat ../release-notes.md
+
+      - name: Comment on release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const notes = fs.readFileSync('release-notes.md', 'utf8');
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              body: context.payload.release.body + '\n\n' + notes
+            });
