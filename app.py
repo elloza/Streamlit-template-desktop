@@ -137,7 +137,6 @@ def main():
 
         if port is None:
             logger.error("No available ports found. Please close other applications and try again.")
-            input("Press Enter to exit...")
             sys.exit(1)
 
         # Start Streamlit in subprocess (not thread - fixes Windows signal handler issue)
@@ -151,7 +150,6 @@ def main():
                 stdout, stderr = streamlit_process.communicate()
                 logger.error(f"Streamlit stderr: {stderr.decode('utf-8', errors='ignore')}")
             cleanup_streamlit()
-            input("Press Enter to exit...")
             sys.exit(1)
 
         logger.info("Streamlit server is ready")
@@ -194,20 +192,17 @@ def main():
         except ImportError:
             logger.error("pywebview is not installed. Install it with: pip install pywebview")
             logger.info(f"You can access the app in your browser at: http://127.0.0.1:{port}")
-            input("Press Enter to exit...")
             cleanup_streamlit()
             sys.exit(1)
 
         except Exception as e:
             logger.error(f"Failed to launch desktop window: {e}")
             logger.info(f"You can access the app in your browser at: http://127.0.0.1:{port}")
-            input("Press Enter to exit...")
             cleanup_streamlit()
             sys.exit(1)
 
     except Exception as e:
         logger.error(f"Application error: {e}", exc_info=True)
-        input("Press Enter to exit...")
         cleanup_streamlit()
         sys.exit(1)
 
