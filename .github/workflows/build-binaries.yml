@@ -150,7 +150,16 @@ jobs:
 
       - name: Check binary size
         run: |
-          size=$(du -sm dist/StreamlitApp | cut -f1)
+          if [ -d "dist/StreamlitApp.app" ]; then
+            size=$(du -sm dist/StreamlitApp.app | cut -f1)
+            echo "Binary type: .app bundle"
+          elif [ -d "dist/StreamlitApp" ]; then
+            size=$(du -sm dist/StreamlitApp | cut -f1)
+            echo "Binary type: directory"
+          else
+            echo "ERROR: No binary output found"
+            exit 1
+          fi
           echo "Binary size: ${size}MB"
           if [ $size -gt 500 ]; then
             echo "Binary size exceeds 500MB limit!"
@@ -160,7 +169,14 @@ jobs:
       - name: Create ZIP archive
         run: |
           cd dist
-          zip -r ../StreamlitApp-MacOS.zip StreamlitApp.app/
+          if [ -d "StreamlitApp.app" ]; then
+            zip -r ../StreamlitApp-MacOS.zip StreamlitApp.app/
+          elif [ -d "StreamlitApp" ]; then
+            zip -r ../StreamlitApp-MacOS.zip StreamlitApp/
+          else
+            echo "ERROR: No binary output to archive"
+            exit 1
+          fi
           cd ..
 
       - name: Upload artifact
