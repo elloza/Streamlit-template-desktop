@@ -222,7 +222,7 @@ jobs:
           echo "**Linux:**" >> ../release-notes.md
           echo "1. Download \`StreamlitApp-Linux-*.tar.gz\`" >> ../release-notes.md
           echo "2. Extract: \`tar -xzf StreamlitApp-Linux-*.tar.gz\`" >> ../release-notes.md
-          echo "3. Install dependencies: \`sudo apt-get install libgtk-3-0 libwebkit2gtk-4.0-37\`" >> ../release-notes.md
+          echo "3. Install dependencies: \`sudo apt-get install libgtk-3-0 libwebkit2gtk-4.1-0\`" >> ../release-notes.md
           echo "4. Run: \`./StreamlitApp/StreamlitApp\`" >> ../release-notes.md
           echo "" >> ../release-notes.md
           echo "**MacOS:**" >> ../release-notes.md
