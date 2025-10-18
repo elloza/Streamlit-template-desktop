@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-10-18
+
+### Fixed
+- **CI/CD**: Fixed MacOS build workflow failure in GitHub Actions
+  - Handle both `.app` bundle and directory output formats from PyInstaller
+  - PyInstaller creates `dist/StreamlitApp/` instead of `dist/StreamlitApp.app/` without `--windowed` flag
+  - Archive step now checks for both formats and packages whichever exists
+  - All three platform builds (Windows, Linux, MacOS) now complete successfully
+
 ## [0.1.5] - 2025-10-18
 
 ### Fixed
