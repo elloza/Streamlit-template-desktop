@@ -8,6 +8,18 @@ echo "======================================"
 echo "Building Streamlit Desktop App (Windows)"
 echo "======================================"
 
+# Detect Python executable (local .conda or system python)
+if [ -f ".conda/python.exe" ]; then
+    PYTHON_CMD=".conda/python.exe"
+    echo "Using local conda Python: $PYTHON_CMD"
+    # Add local conda DLLs if available
+    BINARY_FLAGS="--add-binary=.conda/Library/bin/libexpat.dll;. --add-binary=.conda/Library/bin/ffi.dll;."
+else
+    PYTHON_CMD="python"
+    echo "Using system Python: $PYTHON_CMD"
+    BINARY_FLAGS=""
+fi
+
 # Clean previous builds (but keep build/scripts)
 echo "Cleaning previous builds..."
 rm -rf dist/ *.spec
@@ -17,7 +29,7 @@ rm -rf build/StreamlitApp
 # IMPORTANT: --copy-metadata streamlit is required to include package metadata
 # Without this, streamlit.version will fail with PackageNotFoundError
 echo "Running PyInstaller..."
-.conda/python.exe -m PyInstaller \
+$PYTHON_CMD -m PyInstaller \
     --name="StreamlitApp" \
     --onedir \
     --windowed \
@@ -27,8 +39,7 @@ echo "Running PyInstaller..."
     --add-data="src;src" \
     --add-data="assets;assets" \
     --add-data="config;config" \
-    --add-binary=".conda/Library/bin/libexpat.dll;." \
-    --add-binary=".conda/Library/bin/ffi.dll;." \
+    $BINARY_FLAGS \
     --copy-metadata streamlit \
     --copy-metadata altair \
     --hidden-import=streamlit \

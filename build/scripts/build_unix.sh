@@ -19,6 +19,15 @@ fi
 
 echo "Platform: $PLATFORM"
 
+# Detect Python executable (local .conda or system python)
+if [ -f ".conda/bin/python" ]; then
+    PYTHON_CMD=".conda/bin/python"
+    echo "Using local conda Python: $PYTHON_CMD"
+else
+    PYTHON_CMD="python"
+    echo "Using system Python: $PYTHON_CMD"
+fi
+
 # Clean previous builds (but keep build/scripts)
 echo "Cleaning previous builds..."
 rm -rf dist/ *.spec
@@ -28,7 +37,7 @@ rm -rf build/StreamlitApp
 # IMPORTANT: --copy-metadata streamlit is required to include package metadata
 # Without this, streamlit.version will fail with PackageNotFoundError
 echo "Running PyInstaller..."
-python -m PyInstaller \
+$PYTHON_CMD -m PyInstaller \
     --name="StreamlitApp" \
     $BUNDLE_TYPE \
     --noconfirm \
