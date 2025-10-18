@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-10-18
+
+### Fixed
+- **CI/CD**: Fixed GitHub Actions build failures caused by hardcoded `.conda` paths
+  - Build scripts now detect environment (local vs CI) automatically
+  - Use local `.conda/python.exe` when available, fallback to system `python`
+  - Only include conda-specific binary flags when `.conda` directory exists
+  - All three platforms (Windows, Linux, MacOS) now build successfully in CI
+
 ## [0.1.4] - 2025-10-18
 
 ### Fixed
