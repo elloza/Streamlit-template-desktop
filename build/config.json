@@ -1,0 +1,67 @@
+{
+  "app_name": "StreamlitApp",
+  "version": "0.1.0",
+  "description": "Streamlit Desktop Application Template",
+  "author": "Template User",
+  "icon": "assets/icon_default.png",
+  "platforms": ["win11", "linux"],
+  "pyinstaller": {
+    "onefile": false,
+    "windowed": true,
+    "hidden_imports": [
+      "streamlit",
+      "streamlit.web.cli",
+      "streamlit.web.bootstrap",
+      "pywebview",
+      "pywebview.platforms.winforms",
+      "pywebview.platforms.cef",
+      "pywebview.platforms.gtk",
+      "yaml",
+      "watchdog",
+      "click",
+      "tornado",
+      "altair",
+      "pandas",
+      "numpy",
+      "PIL"
+    ],
+    "exclude_modules": [
+      "matplotlib",
+      "scipy",
+      "sklearn",
+      "tensorflow",
+      "torch"
+    ],
+    "add_data": [
+      {
+        "source": "src",
+        "dest": "src"
+      },
+      {
+        "source": "assets",
+        "dest": "assets"
+      },
+      {
+        "source": "config",
+        "dest": "config"
+      }
+    ]
+  },
+  "build_options": {
+    "clean_before_build": true,
+    "optimize_imports": true,
+    "compress_assets": false,
+    "debug_mode": false
+  },
+  "size_targets": {
+    "max_size_mb": 500,
+    "expected_size_mb": 150,
+    "warn_threshold_mb": 400
+  },
+  "notes": [
+    "Binary size target: <500MB (Principle III from constitution)",
+    "onedir mode preferred for faster startup and smaller size",
+    "hidden_imports include all Streamlit dependencies discovered during testing",
+    "Icon bundling ensures branded window appearance in compiled binary"
+  ]
+}
