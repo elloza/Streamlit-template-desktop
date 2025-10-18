@@ -26,6 +26,11 @@ menu_items:
     icon: "ℹ️"
     page: "src.ui.pages.about"
 
+  - id: "test_custom"
+    label: "Test Custom"
+    icon: "🧪"
+    page: "src.ui.pages.test_custom"
+
 # Streamlit theme customization (optional)
 theme:
   primaryColor: "#1f77b4"

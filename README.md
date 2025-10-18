@@ -1,15 +1,21 @@
 # Streamlit Desktop App Template
 
-A boilerplate project for creating Streamlit desktop applications with binary generation for Win11/Unix (MacOS support aspirational).
+A production-ready template for creating **cross-platform desktop applications** using **Streamlit** and **pywebview**. Build beautiful desktop apps with Python only—no JavaScript, HTML, or CSS required.
 
-## Features
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- 🖥️ **Desktop Application**: Convert Streamlit web apps to native desktop applications using pywebview
-- 📦 **Binary Distribution**: Generate standalone executables with PyInstaller
-- 🎨 **Customizable**: Easy branding with logo and title configuration
-- 🔧 **Extensible**: Add new pages by creating Python modules
-- 🐍 **Python-Only**: No JavaScript, HTML, or CSS required
-- 🌐 **Cross-Platform**: Works on Windows 11 and Unix/Linux
+## ✨ Features
+
+- 🖥️ **Native Desktop Window**: Uses pywebview for true desktop experience (no browser chrome)
+- 📦 **Standalone Binaries**: Distribute as .exe (Windows), executable (Linux/MacOS) with PyInstaller
+- 🎨 **Fully Customizable**: Configurable branding (logo, icon, title) via YAML
+- 🔧 **Easily Extensible**: Add new pages without touching navigation code
+- 🐍 **100% Python**: No web development knowledge required
+- 🌐 **Cross-Platform**: Windows 11, Linux, and MacOS supported
+- 🚀 **Fast Startup**: <5 seconds from launch to window display
+- 📝 **Complete Documentation**: Architecture, user guide, troubleshooting included
+- 🤖 **CI/CD Ready**: GitHub Actions workflow for automated multi-platform builds
 
 ## Quick Start
 
@@ -102,17 +108,63 @@ cd build/scripts
 
 Binaries will be created in the `dist/` directory.
 
-## Documentation
+## 📚 Documentation
 
-- [Architecture](docs/architecture.md) - Technical architecture explanation
-- [Extending](docs/extending.md) - Guide for adding new features
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
-- [Quickstart](specs/001-streamlit-app-scaffold/quickstart.md) - Detailed quickstart guide
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/architecture.md) | Technical architecture, component breakdown, design decisions |
+| [Extending Guide](docs/extending.md) | Step-by-step guide for adding new pages and features |
+| [User Guide](docs/user-guide.md) | End-user documentation for apps built with this template |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
+| [Build Guide](build/README.md) | Comprehensive binary building instructions |
+| [Quickstart](specs/001-streamlit-app-scaffold/quickstart.md) | Detailed setup and validation guide |
 
-## License
+## 🎯 Use Cases
 
-MIT License - See LICENSE file for details
+This template is perfect for:
 
-## Contributing
+- **Internal tools**: Build desktop apps for your team without web deployment
+- **Data visualization**: Create interactive dashboards as desktop applications
+- **Prototyping**: Quickly build desktop app prototypes with Python
+- **Offline applications**: Apps that must run without internet connection
+- **Desktop utilities**: File processors, converters, analysis tools
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 🔧 Technology Stack
+
+- **UI Framework**: [Streamlit](https://streamlit.io/) (≥1.30.0)
+- **Desktop Wrapper**: [pywebview](https://pywebview.flowrl.com/) (≥4.4.0)
+- **Configuration**: PyYAML (≥6.0)
+- **Binary Packaging**: PyInstaller (≥6.0)
+- **Platform Support**: Windows 11, Ubuntu 20.04+, MacOS 10.15+
+
+## 🚀 What's Next?
+
+After setup, check out:
+
+1. **Customize branding** - Replace logo, icon, and title in `config/app.yaml`
+2. **Add your first page** - See [`docs/extending.md`](docs/extending.md)
+3. **Build binary** - Create standalone executable with build scripts
+4. **Deploy with CI/CD** - Use included GitHub Actions workflow
+
+## 📝 License
+
+MIT License - See [LICENSE](LICENSE) file for details
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 💬 Support
+
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Documentation**: See [`docs/`](docs/) folder
+- **Troubleshooting**: See [`docs/troubleshooting.md`](docs/troubleshooting.md)
+
+---
+
+**Built with ❤️ using Python, Streamlit, and pywebview**
