@@ -67,6 +67,22 @@ def _streamlit_worker(port: int, error_queue=None):
         os.chdir(bundle_root)
         worker_logger.info(f"Changed working directory to: {bundle_root}")
 
+        # CRITICAL FIX: Copy .streamlit/config.toml from _internal to bundle root
+        # Streamlit looks for .streamlit/ in the current working directory
+        # In PyInstaller, the config is bundled in _internal/.streamlit/
+        # We need to copy it to the bundle root so Streamlit can find it
+        import shutil
+        streamlit_config_src = get_internal_dir() / ".streamlit"
+        streamlit_config_dst = bundle_root / ".streamlit"
+
+        if streamlit_config_src.exists() and not streamlit_config_dst.exists():
+            worker_logger.info(f"Copying .streamlit config from {streamlit_config_src} to {streamlit_config_dst}")
+            shutil.copytree(streamlit_config_src, streamlit_config_dst)
+        elif streamlit_config_dst.exists():
+            worker_logger.info(f"Streamlit config already exists at {streamlit_config_dst}")
+        else:
+            worker_logger.warning(f"Streamlit config not found at {streamlit_config_src}")
+
         # Configure Streamlit via sys.argv (simulates command-line execution)
         sys.argv = [
             "streamlit",

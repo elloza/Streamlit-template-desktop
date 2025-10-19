@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-10-19
+
+### Fixed
+- **CRITICAL**: Fixed Streamlit config.toml not being found by Streamlit
+  - Root cause: Streamlit looks for `.streamlit/` in the current working directory
+  - In PyInstaller bundles, config is in `_internal/.streamlit/` but CWD is bundle root
+  - Streamlit couldn't find the config, so it used defaults (developmentMode=true)
+  - Solution: Copy `.streamlit/` from `_internal/` to bundle root at worker startup
+  - Impact: Streamlit now correctly reads the bundled configuration
+
+### Changed
+- Worker process now copies `.streamlit/` directory to bundle root on first run
+- Added diagnostic logging to show config copy operation
+
+**Technical Details**:
+Streamlit searches for configuration in this order:
+1. Current working directory (`$CWD/.streamlit/config.toml`)
+2. User home directory (`~/.streamlit/config.toml`)
+3. Global config path
+
+PyInstaller bundles files in `_internal/` but we set CWD to bundle root. The fix copies the bundled config to where Streamlit expects it.
+
 ## [0.1.8] - 2025-10-19
 
 ### Fixed
