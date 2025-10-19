@@ -70,7 +70,7 @@ jobs:
 
   build-linux:
     name: Build Linux Binary
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # Use older Ubuntu for better GLIBC compatibility
 
     steps:
       - name: Checkout code
