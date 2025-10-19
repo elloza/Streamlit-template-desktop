@@ -17,6 +17,7 @@ import atexit
 import logging
 import multiprocessing
 from pathlib import Path
+from typing import Optional
 
 
 def _streamlit_worker(port: int, error_queue=None):
@@ -36,7 +37,7 @@ def _streamlit_worker(port: int, error_queue=None):
         import os
         from streamlit.web import cli as stcli
         from src.logic.bundle_utils import (
-            is_frozen, get_bundle_root, get_script_path, log_environment_info
+            is_frozen, get_bundle_root, get_script_path, log_environment_info, get_internal_dir
         )
         from src.logic.logger import setup_worker_logging
 
@@ -195,7 +196,7 @@ def cleanup_streamlit(streamlit_process, logger):
         logger.info("Streamlit server stopped")
 
 
-def load_window_icon(config: dict, get_icon_path, logger) -> str:
+def load_window_icon(config: dict, get_icon_path, logger) -> Optional[str]:
     """
     Load window icon with fallback to default.
 
