@@ -5,10 +5,28 @@ Implements FR-001, FR-002, FR-004, FR-005, FR-013, FR-016, FR-019.
 import streamlit as st
 import importlib
 import logging
+import toml
 from pathlib import Path
 from typing import Dict, List, Any
 
 logger = logging.getLogger(__name__)
+
+
+def get_app_version() -> str:
+    """Get application version from pyproject.toml."""
+    try:
+        pyproject_path = Path("pyproject.toml")
+        if not pyproject_path.exists():
+            # Try _internal directory for bundled apps
+            pyproject_path = Path("_internal/pyproject.toml")
+
+        if pyproject_path.exists():
+            data = toml.load(pyproject_path)
+            return data.get("project", {}).get("version", "0.1.0")
+    except Exception as e:
+        logger.warning(f"Failed to read version from pyproject.toml: {e}")
+
+    return "0.1.0"  # Default fallback
 
 
 def render_sidebar(config: Dict[str, Any]) -> str:
@@ -32,7 +50,8 @@ def render_sidebar(config: Dict[str, Any]) -> str:
         selected_page = _render_menu(menu_items)
 
         st.markdown("---")
-        st.caption("📱 Desktop App Template v0.1.0")
+        version = get_app_version()
+        st.caption(f"📱 Desktop App Template v{version}")
 
     return selected_page
 

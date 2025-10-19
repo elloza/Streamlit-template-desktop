@@ -97,8 +97,55 @@ def _streamlit_worker(port: int, error_queue=None):
 
         worker_logger.info(f"Starting Streamlit CLI with args: {sys.argv}")
 
-        # Run Streamlit CLI (blocks until server stops)
-        sys.exit(stcli.main())
+        # Redirect stdout and stderr to log files to capture Streamlit output
+        import os
+        from pathlib import Path
+
+        logs_dir = Path("logs")
+        logs_dir.mkdir(exist_ok=True)
+
+        stdout_log = logs_dir / "streamlit_stdout.log"
+        stderr_log = logs_dir / "streamlit_stderr.log"
+
+        # Open log files
+        stdout_file = open(stdout_log, 'w', encoding='utf-8')
+        stderr_file = open(stderr_log, 'w', encoding='utf-8')
+
+        # Save original file descriptors
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+
+        try:
+            # Redirect to log files
+            sys.stdout = stdout_file
+            sys.stderr = stderr_file
+
+            worker_logger.info(f"Redirecting Streamlit output to {stdout_log} and {stderr_log}")
+
+            # Run Streamlit CLI (blocks until server stops)
+            exit_code = stcli.main()
+
+        except Exception as e:
+            # Restore stderr to log the error
+            sys.stderr = old_stderr
+            worker_logger.error(f"Streamlit CLI crashed: {e}")
+            import traceback
+            worker_logger.error(traceback.format_exc())
+            exit_code = 1
+
+        finally:
+            # Restore original stdout/stderr
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+
+            # Close log files
+            stdout_file.close()
+            stderr_file.close()
+
+            # Log that Streamlit has exited
+            worker_logger.info(f"Streamlit CLI exited with code: {exit_code}")
+
+        sys.exit(exit_code)
 
     except Exception as e:
         # Capture any error and send to parent process

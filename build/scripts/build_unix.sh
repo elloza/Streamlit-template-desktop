@@ -36,6 +36,11 @@ rm -rf build/StreamlitApp
 # Build with PyInstaller
 # IMPORTANT: --copy-metadata streamlit is required to include package metadata
 # Without this, streamlit.version will fail with PackageNotFoundError
+
+# Find Streamlit installation path and add static files
+STREAMLIT_PATH=$($PYTHON_CMD -c "import streamlit, os; print(os.path.dirname(streamlit.__file__))")
+echo "Streamlit path: $STREAMLIT_PATH"
+
 echo "Running PyInstaller..."
 $PYTHON_CMD -m PyInstaller \
     --name="StreamlitApp" \
@@ -47,8 +52,13 @@ $PYTHON_CMD -m PyInstaller \
     --add-data="assets:assets" \
     --add-data="config:config" \
     --add-data=".streamlit:.streamlit" \
+    --add-data="pyproject.toml:." \
+    --add-data="$STREAMLIT_PATH/static:streamlit/static" \
+    --add-data="$STREAMLIT_PATH/runtime:streamlit/runtime" \
+    --add-data="$STREAMLIT_PATH/vendor:streamlit/vendor" \
     --copy-metadata streamlit \
     --copy-metadata altair \
+    --collect-data streamlit \
     --hidden-import=streamlit \
     --hidden-import=streamlit.web.cli \
     --hidden-import=streamlit.web.bootstrap \
