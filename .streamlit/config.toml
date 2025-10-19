@@ -1,0 +1,54 @@
+# Streamlit Configuration for PyInstaller Bundle
+# This file is bundled with the executable to ensure proper headless server operation
+
+[logger]
+# Logging level for Streamlit internal logs
+level = "info"
+
+[client]
+# Show error details in the browser (disable for production)
+showErrorDetails = false
+
+# Toolbar mode - minimal for cleaner desktop app UI
+toolbarMode = "minimal"
+
+[server]
+# Run in headless mode (no browser auto-open)
+headless = true
+
+# Disable file watcher since this is a bundled app
+runOnSave = false
+
+# Maximum upload size in MB
+maxUploadSize = 200
+
+# Server address
+address = "127.0.0.1"
+
+# Enable CORS for local desktop app
+enableCORS = false
+
+# Enable XSRF protection
+enableXsrfProtection = true
+
+[browser]
+# Disable usage stats collection
+gatherUsageStats = false
+
+# Server address for browser connections
+serverAddress = "127.0.0.1"
+
+[runner]
+# Enable magic commands
+magicEnabled = true
+
+# Fast reruns for better UX
+fastReruns = true
+
+# Allow widget state to persist
+fixMatplotlib = true
+
+[theme]
+# Use default Streamlit theme
+# Can be customized via config/app.yaml if needed
+base = "light"

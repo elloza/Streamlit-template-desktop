@@ -35,7 +35,8 @@ env/
 
 # PyInstaller
 *.manifest
-*.spec
+# Note: DO NOT ignore *.spec - our StreamlitApp.spec is version controlled
+# Only auto-generated .spec files should be ignored, and ours is hand-maintained
 
 # Unit test / coverage
 htmlcov/
@@ -52,7 +53,10 @@ coverage.xml
 .pytest_cache/
 
 # Streamlit
-.streamlit/
+# Note: DO NOT ignore .streamlit/ - config.toml is required for PyInstaller builds
+# Only ignore local state/cache files
+.streamlit/secrets.toml
+.streamlit/credentials.toml
 
 # Logs
 *.log
@@ -70,7 +74,7 @@ Thumbs.db
 # Project-specific
 .conda
 .claude
-.specify/
+# Note: .specify/ contains speckit scripts and templates - should NOT be ignored
 
 # Temporary files
 *.tmp

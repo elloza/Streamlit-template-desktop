@@ -46,11 +46,18 @@ $PYTHON_CMD -m PyInstaller \
     --add-data="src:src" \
     --add-data="assets:assets" \
     --add-data="config:config" \
+    --add-data=".streamlit:.streamlit" \
     --copy-metadata streamlit \
     --copy-metadata altair \
     --hidden-import=streamlit \
     --hidden-import=streamlit.web.cli \
     --hidden-import=streamlit.web.bootstrap \
+    --hidden-import=streamlit.runtime.scriptrunner \
+    --hidden-import=streamlit.runtime.app_session \
+    --hidden-import=streamlit.runtime.state \
+    --hidden-import=streamlit.runtime.state.session_state \
+    --hidden-import=streamlit.proto \
+    --hidden-import=streamlit.logger \
     --hidden-import=pywebview \
     --hidden-import=yaml \
     --hidden-import=watchdog \
@@ -60,6 +67,9 @@ $PYTHON_CMD -m PyInstaller \
     --hidden-import=pandas \
     --hidden-import=numpy \
     --hidden-import=PIL \
+    --hidden-import=pydantic \
+    --hidden-import=typing_extensions \
+    --hidden-import=importlib.metadata \
     --exclude-module=matplotlib \
     --exclude-module=scipy \
     --exclude-module=sklearn \

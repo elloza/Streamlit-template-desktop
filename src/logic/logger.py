@@ -54,3 +54,41 @@ def setup_logging(log_level: str = "INFO", log_file: str = "logs/app.log"):
 
     logger.info("Logging initialized")
     return logger
+
+
+def setup_worker_logging(log_file: str = "logs/worker.log"):
+    """
+    Configure logging for Streamlit worker subprocess.
+
+    Creates a separate log file to capture worker process errors that
+    would otherwise be lost when running in separate process.
+
+    Args:
+        log_file: Path to worker log file
+
+    Returns:
+        Logger instance configured for worker process
+    """
+    # Create logs directory if it doesn't exist
+    log_path = Path(log_file)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Create worker-specific logger
+    worker_logger = logging.getLogger('streamlit_worker')
+    worker_logger.setLevel(logging.DEBUG)
+    worker_logger.handlers.clear()
+
+    # File handler for worker errors
+    try:
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setLevel(logging.DEBUG)
+        file_formatter = logging.Formatter(
+            '[%(asctime)s] [%(levelname)s] [WORKER] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_formatter)
+        worker_logger.addHandler(file_handler)
+    except Exception as e:
+        print(f"Warning: Could not set up worker logging: {e}")
+
+    return worker_logger
