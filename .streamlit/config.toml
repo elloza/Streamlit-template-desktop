@@ -1,6 +1,11 @@
 # Streamlit Configuration for PyInstaller Bundle
 # This file is bundled with the executable to ensure proper headless server operation
 
+[global]
+# CRITICAL: Must be false to allow server.port configuration
+# When true, conflicts with --server.port flag
+developmentMode = false
+
 [logger]
 # Logging level for Streamlit internal logs
 level = "info"

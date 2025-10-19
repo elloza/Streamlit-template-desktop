@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-10-19
+
+### Fixed
+- **CRITICAL**: Fixed Streamlit config conflict preventing server startup
+  - Root cause: `.streamlit/config.toml` had `global.developmentMode` set to default (true)
+  - Streamlit throws `RuntimeError: server.port does not work when global.developmentMode is true`
+  - Solution: Explicitly set `global.developmentMode = false` in config.toml
+  - Impact: Server can now use `--server.port` flag without conflicts
+
+### Changed
+- Updated `.streamlit/config.toml` to explicitly disable development mode
+
+**Technical Details**:
+When `global.developmentMode=true`, Streamlit prevents runtime port configuration to avoid conflicts with hot-reloading. For production/bundled apps, this must be `false`.
+
 ## [0.1.7] - 2025-10-19
 
 ### Fixed
